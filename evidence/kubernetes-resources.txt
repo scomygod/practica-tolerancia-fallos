@@ -1,0 +1,18 @@
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/api-gateway     1/1     1            1           53m
+deployment.apps/inventory       2/2     2            2           53m
+deployment.apps/notifications   1/1     1            1           53m
+deployment.apps/payments        1/1     1            1           53m
+deployment.apps/postgres        1/1     1            1           53m
+deployment.apps/reservations    1/1     1            1           53m
+
+NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+service/api-gateway     NodePort    10.96.131.26    <none>        8000:30080/TCP   53m
+service/inventory       ClusterIP   10.96.119.184   <none>        8000/TCP         53m
+service/notifications   ClusterIP   10.96.189.122   <none>        8000/TCP         53m
+service/payments        ClusterIP   10.96.108.59    <none>        8000/TCP         53m
+service/postgres        ClusterIP   10.96.215.142   <none>        5432/TCP         53m
+service/reservations    ClusterIP   10.96.125.107   <none>        8000/TCP         53m
+
+NAME                                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/postgres-data   Bound    pvc-a8ce23b0-66ed-49e5-80a1-79735a664b8e   1Gi        RWO            standard       <unset>                 53m

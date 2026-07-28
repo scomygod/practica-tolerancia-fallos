@@ -15,14 +15,14 @@ echo "Restaurando PAYMENT_DELAY_SECONDS a cero..."
 kubectl -n "$namespace" patch configmap tickets-config \
   --type merge \
   -p '{"data":{"PAYMENT_DELAY_SECONDS":"0"}}'
+kubectl -n "$namespace" set env \
+  deployment/payments \
+  PAYMENT_DELAY_SECONDS=0
 
 echo "Restaurando réplicas de la demo..."
 kubectl -n "$namespace" scale deployment/inventory --replicas=2
 kubectl -n "$namespace" scale deployment/payments --replicas=1
 kubectl -n "$namespace" scale deployment/notifications --replicas=1
-
-echo "Reiniciando Pagos para cargar la configuración restaurada..."
-kubectl -n "$namespace" rollout restart deployment/payments
 
 for deployment in inventory payments notifications; do
   echo "Esperando rollout de $deployment..."

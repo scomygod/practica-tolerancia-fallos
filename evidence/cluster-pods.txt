@@ -1,0 +1,8 @@
+NAME                             READY   STATUS    RESTARTS   AGE   IP            NODE                      NOMINATED NODE   READINESS GATES
+api-gateway-5b9b6d74d9-xpx79     1/1     Running   0          36m   10.244.2.12   tickets-cluster-worker2   <none>           <none>
+inventory-7d76c8b946-8wrsd       1/1     Running   0          32m   10.244.2.18   tickets-cluster-worker2   <none>           <none>
+inventory-7d76c8b946-xmps5       1/1     Running   0          23m   10.244.1.14   tickets-cluster-worker    <none>           <none>
+notifications-7db9fd74fb-jbvzm   1/1     Running   0          16m   10.244.1.15   tickets-cluster-worker    <none>           <none>
+payments-568d448fd7-zgwws        1/1     Running   0          19m   10.244.2.20   tickets-cluster-worker2   <none>           <none>
+postgres-5c4dccff4d-b55cn        1/1     Running   0          53m   10.244.1.5    tickets-cluster-worker    <none>           <none>
+reservations-74c85bdcdd-ggz55    1/1     Running   0          36m   10.244.2.15   tickets-cluster-worker2   <none>           <none>
