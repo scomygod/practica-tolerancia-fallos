@@ -1,0 +1,14 @@
+Abriendo acceso temporal a la API de Inventario...
+Inventario preparado: {"event_id":1,"available_seats":1}
+Lanzando dos reservas concurrentes...
+Solicitud de race-one@example.com:
+  HTTP: 409
+  Duración: 0.034 s
+  Cuerpo: {"detail":"No seats available"}
+Solicitud de race-two@example.com:
+  HTTP: 201
+  Duración: 0.039 s
+  Cuerpo: {"id":"5c9ab2f4-c245-4883-a863-6b259a38a73c","event_id":1,"email":"race-two@example.com","amount":49.99,"status":"confirmed","notification_status":"sent","message":"Reservation confirmed"}
+Inventario final:
+{"event_id": 1, "event_name": "Concierto de prueba", "available_seats": 0}
+Condición de carrera controlada correctamente.
