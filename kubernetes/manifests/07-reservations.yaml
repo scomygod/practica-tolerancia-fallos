@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reservations
+  namespace: tickets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reservations
+  template:
+    metadata:
+      labels:
+        app: reservations
+    spec:
+      containers:
+        - name: reservations
+          image: tickets-chaos-lab-reservations:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: tickets-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: tickets-db-secret
+                  key: DATABASE_URL
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reservations
+  namespace: tickets
+spec:
+  type: ClusterIP
+  selector:
+    app: reservations
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
