@@ -123,6 +123,35 @@ def reserve_seat(
     return SeatsResponse(event_id=event_id, available_seats=available_seats)
 
 
+@app.post("/inventory/{event_id}/release", response_model=SeatsResponse)
+def release_seat(
+    event_id: int,
+    database: Session = Depends(get_db),
+) -> SeatsResponse:
+    statement = (
+        update(inventory)
+        .where(inventory.c.event_id == event_id)
+        .values(available_seats=inventory.c.available_seats + 1)
+        .returning(inventory.c.available_seats)
+    )
+
+    try:
+        available_seats = database.execute(statement).scalar_one_or_none()
+        if available_seats is None:
+            database.rollback()
+            raise HTTPException(status_code=404, detail="Event not found")
+        database.commit()
+    except SQLAlchemyError as error:
+        handle_database_error(database, error)
+
+    logger.info(
+        "Asiento liberado para evento %s; quedan %s",
+        event_id,
+        available_seats,
+    )
+    return SeatsResponse(event_id=event_id, available_seats=available_seats)
+
+
 @app.post("/inventory/{event_id}/reset", response_model=SeatsResponse)
 def reset_inventory(
     event_id: int,

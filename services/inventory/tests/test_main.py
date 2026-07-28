@@ -79,6 +79,33 @@ def test_reserve_without_availability(database):
     database.commit.assert_not_called()
 
 
+def test_release_is_single_update(database):
+    database.execute.return_value.scalar_one_or_none.return_value = 10
+
+    response = client.post("/inventory/1/release")
+
+    statement = database.execute.call_args.args[0]
+    sql = str(statement.compile(dialect=postgresql.dialect())).upper()
+
+    assert response.status_code == 200
+    assert response.json() == {"event_id": 1, "available_seats": 10}
+    assert sql.startswith("UPDATE INVENTORY")
+    assert "AVAILABLE_SEATS + " in sql
+    assert "RETURNING INVENTORY.AVAILABLE_SEATS" in sql
+    assert database.execute.call_count == 1
+    database.commit.assert_called_once()
+
+
+def test_release_unknown_event(database):
+    database.execute.return_value.scalar_one_or_none.return_value = None
+
+    response = client.post("/inventory/99/release")
+
+    assert response.status_code == 404
+    database.rollback.assert_called_once()
+    database.commit.assert_not_called()
+
+
 def test_reset_inventory(database):
     database.execute.return_value.rowcount = 1
 
