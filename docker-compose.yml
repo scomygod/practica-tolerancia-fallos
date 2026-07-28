@@ -1,1 +1,141 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: tickets
+      POSTGRES_USER: tickets
+      POSTGRES_PASSWORD: tickets
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tickets -d tickets"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
 
+  inventory:
+    build:
+      context: ./services/inventory
+    environment:
+      DATABASE_URL: postgresql+psycopg://tickets:tickets@postgres:5432/tickets
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8000/health', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  payments:
+    build:
+      context: ./services/payments
+    environment:
+      PAYMENT_DELAY_SECONDS: "0"
+      PAYMENT_FAILURE_RATE: "0"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8000/health', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  notifications:
+    build:
+      context: ./services/notifications
+    environment:
+      NOTIFICATION_DELAY_SECONDS: "0"
+      NOTIFICATION_FAILURE_RATE: "0"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8000/health', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  reservations:
+    build:
+      context: ./services/reservations
+    environment:
+      DATABASE_URL: postgresql+psycopg://tickets:tickets@postgres:5432/tickets
+      INVENTORY_URL: http://inventory:8000
+      PAYMENTS_URL: http://payments:8000
+      NOTIFICATIONS_URL: http://notifications:8000
+      INVENTORY_TIMEOUT_SECONDS: "3"
+      PAYMENT_TIMEOUT_SECONDS: "3"
+      NOTIFICATION_TIMEOUT_SECONDS: "2"
+      INVENTORY_MAX_RETRIES: "3"
+      CIRCUIT_BREAKER_FAILURE_THRESHOLD: "3"
+      CIRCUIT_BREAKER_RECOVERY_SECONDS: "20"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      inventory:
+        condition: service_healthy
+      payments:
+        condition: service_healthy
+      notifications:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8000/health', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+    environment:
+      RESERVATIONS_URL: http://reservations:8000
+      INVENTORY_URL: http://inventory:8000
+      GATEWAY_TIMEOUT_SECONDS: "10"
+    depends_on:
+      reservations:
+        condition: service_healthy
+      inventory:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8000/health', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  postgres_data:
