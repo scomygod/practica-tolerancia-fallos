@@ -22,7 +22,7 @@ spec:
               app: inventory
       containers:
         - name: inventory
-          image: tickets-chaos-lab-inventory:latest
+          image: tickets/inventory:1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: DATABASE_URL

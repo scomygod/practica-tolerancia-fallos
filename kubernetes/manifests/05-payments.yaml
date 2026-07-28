@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: payments
-          image: tickets-chaos-lab-payments:latest
+          image: tickets/payments:1.0
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:

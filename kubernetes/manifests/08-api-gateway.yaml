@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: tickets-chaos-lab-api-gateway:latest
+          image: tickets/api-gateway:1.0
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:

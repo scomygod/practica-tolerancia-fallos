@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: notifications
-          image: tickets-chaos-lab-notifications:latest
+          image: tickets/notifications:1.0
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
