@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Cachés
+.cache/
+
+# Logs
+*.log
+logs/
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Evidencias temporales
+evidence/tmp/
+evidence/temp/
+evidence/**/*.tmp
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
