@@ -197,4 +197,5 @@ Completar antes de entregar:
 
 | Nombre | Identificador |
 |---|---|
-| `<Rafael Prieto>` | `<Adrian Lazo>` |
+| `<Rafael Prieto>` | `<raeto0` |
+| `<Rafael Prieto>` | `<scomygod>` |
