@@ -10,12 +10,13 @@ El script selecciona un pod de Inventario en ejecución y lo elimina mediante `k
 
 ## Defensa
 
+La defensa principal del escenario es:
+
 - Dos réplicas del Servicio de Inventario.
 - `topologySpreadConstraints` para distribuir las réplicas entre nodos.
-- Service `ClusterIP`, que dirige las solicitudes hacia los pods disponibles.
-- Readiness y liveness probes.
 - Reconciliación automática del Deployment.
-- Reintentos limitados del Servicio de Reservas cuando Inventario no está disponible.
+
+Kubernetes mantiene una réplica disponible y crea automáticamente el reemplazo de la eliminada. El Service `ClusterIP` y las probes apoyan el envío de tráfico hacia pods disponibles. Los reintentos limitados del Servicio de Reservas aportan un manejo secundario cuando una llamada a Inventario no puede completarse, pero no son el mecanismo principal de recuperación demostrado por este script.
 
 ## Comportamiento esperado
 
@@ -52,15 +53,3 @@ kubectl -n tickets get deployment inventory
 kubectl -n tickets get pods -l app=inventory -o wide
 curl --fail http://localhost:8080/api/inventory/1
 ```
-
-## Evidencia requerida
-
-Guardar en `evidence/inventory/`:
-
-1. Estado inicial con los dos pods y sus nodos.
-2. Nombre del pod seleccionado y salida de `kubectl delete pod`.
-3. Estado inmediatamente posterior a la eliminación.
-4. Resultados de las consultas realizadas durante la recreación.
-5. Nombre del nuevo pod.
-6. Estado final con dos réplicas listas y sus nodos.
-7. Resumen de consultas correctas y fallidas mostrado por el script.

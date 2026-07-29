@@ -74,16 +74,3 @@ curl --fail http://localhost:8080/api/inventory/1
 kubectl -n tickets logs deployment/inventory --since=10m
 kubectl -n tickets logs deployment/reservations --since=10m
 ```
-
-## Evidencia requerida
-
-Guardar en `evidence/race-condition/`:
-
-1. Respuesta del reset que muestra un asiento disponible.
-2. Correos distintos utilizados por las dos solicitudes.
-3. Código HTTP, cuerpo y duración de cada solicitud.
-4. Una respuesta HTTP 201.
-5. Una respuesta HTTP 409.
-6. Inventario final con `available_seats=0`.
-7. Mensaje de verificación automática exitosa.
-8. Respuesta del script de recuperación con diez asientos.

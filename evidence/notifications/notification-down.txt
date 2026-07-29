@@ -1,0 +1,32 @@
+ESCENARIO: CORREO PERDIDO
+
+Inyección:
+- El Deployment notifications se escaló a cero réplicas.
+- Estado observado: READY 0/0, UP-TO-DATE 0, AVAILABLE 0.
+- kubectl no encontró pods con la etiqueta app=notifications.
+
+Resultado durante el fallo:
+- POST /api/reservations respondió HTTP 201.
+- reservation_id: 04345b0a-7d42-466f-82e3-2d870e706e8e.
+- status: confirmed.
+- notification_status: pending.
+- message: Reservation confirmed; notification pending.
+
+Interpretación:
+- Inventario y Pagos completaron la operación principal.
+- La indisponibilidad de Notificaciones activó el fallback.
+- La reserva no fue cancelada ni presentada como recuperación del servicio.
+
+Recuperación:
+- El Deployment notifications se restauró a una réplica.
+- El rollout terminó correctamente.
+- Una nueva reserva respondió HTTP 201.
+- reservation_id: fc23e369-4539-4250-bb96-d66bbcfbd248.
+- status: confirmed.
+- notification_status: sent.
+- Notificaciones registró el procesamiento simulado y POST /notifications respondió HTTP 200.
+
+Fuentes:
+- docs/report/images/12-notifications-down.png.
+- docs/report/images/13-notification-fallback.png.
+- docs/report/images/14-notification-recovery.png.

@@ -1,0 +1,54 @@
+ESCENARIO: PASARELA LENTA
+
+Inyección:
+- PAYMENT_DELAY_SECONDS=20 en el Deployment payments.
+- PAYMENT_TIMEOUT_SECONDS=3 en Reservas.
+- Umbral del Circuit Breaker: 3 fallos consecutivos.
+
+Resultados medidos en la ejecución documentada en la Figura 9:
+- Reserva 1: HTTP 503 en 3.048730 s.
+- Reserva 2: HTTP 503 en 3.046899 s.
+- Reserva 3: HTTP 503 en 3.043016 s.
+- Reserva 4: HTTP 503 en 0.026511 s.
+- Detalle de la cuarta respuesta: Payment circuit breaker is open.
+
+Extracto curado de una ejecución local complementaria:
+
+Reserva b391ba4b-a698-4fc0-add7-df6561aa5ea8
+- Inventario reservó un asiento.
+- Inventario liberó el asiento con HTTP 200.
+- Compensación completada.
+- Pago fallido.
+- POST /reservations respondió HTTP 503.
+
+Reserva 97f574d6-b2c8-472f-8dca-2a7be7cb65d8
+- Inventario reservó un asiento.
+- Inventario liberó el asiento con HTTP 200.
+- Compensación completada.
+- Pago fallido.
+- POST /reservations respondió HTTP 503.
+
+Reserva 0b8c40b1-841f-478f-b85d-94ff929e777d
+- Inventario reservó un asiento.
+- Inventario liberó el asiento con HTTP 200.
+- Compensación completada.
+- Pago fallido.
+- POST /reservations respondió HTTP 503.
+
+Reserva f579740b-f635-413d-a52b-a664f65bb4ad
+- Inventario reservó un asiento.
+- No se registró una llamada a Pagos porque el circuito ya estaba abierto.
+- Inventario liberó el asiento con HTTP 200.
+- Compensación completada.
+- Pago fallido.
+- POST /reservations respondió HTTP 503.
+
+Recuperación:
+- PAYMENT_DELAY_SECONDS se restableció a 0.
+- Se esperó el período de recuperación del Circuit Breaker.
+- La reserva bce49b4b-544f-4267-a0f6-cdc971560e5a llamó correctamente a Inventario, Pagos y Notificaciones.
+- POST /reservations respondió HTTP 201.
+
+Fuentes:
+- Capturas docs/report/images/09-payment-timeout.png a 11.1-payment-recovery.png.
+- Log local evidence/payments/reservations-circuit-breaker.log, excluido de Git por contener salida completa y repetitiva.

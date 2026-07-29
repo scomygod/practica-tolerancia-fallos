@@ -2,6 +2,13 @@
 
 Práctica académica de tolerancia a fallos sobre una plataforma simplificada de reservas de entradas desplegada en Kubernetes multinodo.
 
+## Integrantes
+
+| Nombre |
+|---|
+| Rafael Prieto |
+| Adrian Lazo |
+
 ## Índice
 
 - [Objetivo](#objetivo)
@@ -9,6 +16,8 @@ Práctica académica de tolerancia a fallos sobre una plataforma simplificada de
 - [Tecnologías](#tecnologías)
 - [Estructura](#estructura-del-repositorio)
 - [Requisitos](#requisitos)
+- [Instalación local](#instalación-local-para-pruebas)
+- [Pruebas](#ejecución-de-pruebas)
 - [Despliegue rápido](#despliegue-rápido)
 - [Uso de la API](#uso-de-la-api)
 - [Escenarios de fallo](#escenarios-de-fallo)
@@ -68,6 +77,31 @@ El diagrama Mermaid y la distribución física están en [docs/architecture.md](
 - Git.
 
 Los comandos se ejecutan desde la raíz del repositorio.
+
+## Instalación local para pruebas
+
+Crear un entorno virtual e instalar las dependencias declaradas por los cinco servicios:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install \
+  -r services/api-gateway/requirements.txt \
+  -r services/reservations/requirements.txt \
+  -r services/inventory/requirements.txt \
+  -r services/payments/requirements.txt \
+  -r services/notifications/requirements.txt
+```
+
+## Ejecución de pruebas
+
+Cada suite se ejecuta desde el directorio de su servicio para mantener aislado el paquete `app`:
+
+```bash
+for service in api-gateway reservations inventory payments notifications; do
+  (cd "services/$service" && python3 -m pytest tests)
+done
+```
 
 ## Despliegue rápido
 
@@ -132,9 +166,9 @@ curl --fail \
 
 | Escenario | Inyección | Defensa | Documentación |
 |---|---|---|---|
-| Inventario Fantasma | Eliminar un pod de Inventario | Dos réplicas distribuidas, Service y retries | [Escenario 01](docs/scenarios/01-inventory-crash.md) |
+| Inventario Fantasma | Eliminar un pod de Inventario | Dos réplicas distribuidas y recuperación automática de Kubernetes | [Escenario 01](docs/scenarios/01-inventory-crash.md) |
 | Pasarela Lenta | Latencia de Pagos de 20 segundos | Timeout y Circuit Breaker | [Escenario 02](docs/scenarios/02-payment-latency.md) |
-| Correo Perdido | Escalar Notificaciones a cero | Fallback con notificación pendiente | [Escenario 03](docs/scenarios/03-notification-down.md) |
+| Correo Perdido | Escalar Notificaciones a cero | Fallback con `notification_status=pending` | [Escenario 03](docs/scenarios/03-notification-down.md) |
 | Condición de Carrera | Dos reservas por el último asiento | Actualización SQL atómica | [Escenario 04](docs/scenarios/04-race-condition.md) |
 
 ### Ejecutar fallos
@@ -165,14 +199,14 @@ Para restaurar el estado general de la demo:
 
 ## Evidencias
 
-Las salidas, capturas y logs se guardan por escenario:
+Las salidas textuales disponibles se organizan por escenario bajo `evidence/`. Las capturas utilizadas por el informe están en `docs/report/images/`.
 
 | Escenario | Directorio |
 |---|---|
-| Inventario Fantasma | `evidence/inventory/` |
-| Pasarela Lenta | `evidence/payments/` |
-| Correo Perdido | `evidence/notifications/` |
-| Condición de Carrera | `evidence/race-condition/` |
+| Inventario Fantasma | `evidence/inventory/pods-after-delete.txt` y Figuras 6–8 |
+| Pasarela Lenta | `evidence/payments/payment-latency.txt` y Figuras 9–11.1 |
+| Correo Perdido | `evidence/notifications/notification-down.txt` y Figuras 12–14 |
+| Condición de Carrera | `evidence/race-condition/result.txt` y Figuras 15–16 |
 
 ## Limpieza del entorno
 
@@ -187,15 +221,6 @@ Este comando elimina el clúster kind `tickets-cluster`, pero no borra archivos 
 - Pagos y Notificaciones son simulados; no procesan dinero ni envían correos reales.
 - PostgreSQL utiliza una sola réplica y un PVC local de laboratorio.
 - El Circuit Breaker de Pagos vive en memoria y se reinicia con el pod de Reservas.
-- Las notificaciones pendientes no se reenvían automáticamente.
+- Las notificaciones con `notification_status=pending` no se reenvían automáticamente.
 - No existen frontend, autenticación, rate limiting, CI/CD ni observabilidad avanzada.
 - Los escenarios de sobrecarga y conectividad intermitente con PostgreSQL solo están analizados en [docs/failure-mapping.md](docs/failure-mapping.md).
-
-## Integrantes
-
-Completar antes de entregar:
-
-| Nombre | Identificador |
-|---|---|
-| `<Rafael Prieto>` | `<raeto0` |
-| `<Rafael Prieto>` | `<scomygod>` |

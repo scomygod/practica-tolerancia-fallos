@@ -20,9 +20,9 @@ Notificaciones es una dependencia no crítica. Reservas intenta enviar la notifi
 
 - `status` permanece como `confirmed`.
 - `notification_status` se guarda como `pending`.
-- La API responde HTTP 201 e informa que la notificación quedó pendiente.
+- La API responde HTTP 201 e informa `notification_status=pending`.
 
-No existe reenvío automático, cola ni worker para procesar posteriormente las notificaciones pendientes.
+No existe reenvío automático, cola ni worker para procesar posteriormente las notificaciones con estado `pending`.
 
 ## Comportamiento esperado
 
@@ -41,7 +41,7 @@ No existen pods de Notificaciones. Inventario reserva el asiento y Pagos aprueba
 }
 ```
 
-Los logs de Reservas deben mostrar que la reserva se confirmó con la notificación pendiente.
+Los logs de Reservas registran la confirmación con `notification_status=pending`.
 
 ### Después
 
@@ -70,17 +70,3 @@ kubectl -n tickets get pods -l app=notifications -o wide
 kubectl -n tickets logs deployment/reservations --since=10m
 kubectl -n tickets logs deployment/notifications --since=10m
 ```
-
-## Evidencia requerida
-
-Guardar en `evidence/notifications/`:
-
-1. Escalado de Notificaciones a cero.
-2. Consulta que demuestre que no existen pods de Notificaciones.
-3. Respuesta HTTP 201 completa durante el fallo.
-4. Campos `status=confirmed` y `notification_status=pending`.
-5. Logs del fallback en Reservas.
-6. Escalado de recuperación a una réplica.
-7. Rollout completo de Notificaciones.
-8. Nueva respuesta HTTP 201 con `notification_status=sent`.
-9. Logs de la notificación enviada después de la recuperación.

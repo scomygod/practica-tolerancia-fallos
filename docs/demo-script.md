@@ -4,7 +4,7 @@ Duración objetivo: **12–14 minutos**. Participantes: **Adrian** y **Rafael**.
 
 ## Preparación previa
 
-Completar esta lista antes de compartir pantalla:
+Estado requerido antes de compartir pantalla:
 
 - [ ] Docker Desktop abierto y estable.
 - [ ] Clúster `tickets-cluster` creado.
@@ -18,7 +18,7 @@ Completar esta lista antes de compartir pantalla:
 - [ ] Comandos de cada sección copiados.
 - [ ] Evidencias de respaldo disponibles.
 
-Preparación recomendada:
+Restablecimiento inicial:
 
 ```bash
 kubectl -n tickets set env deployment/payments PAYMENT_DELAY_SECONDS=0
@@ -28,7 +28,7 @@ kubectl -n tickets rollout status deployment/reservations --timeout=180s
 ./scripts/verify-cluster.sh
 ```
 
-Preparar tres ventanas:
+Distribución de ventanas:
 
 | Ventana | Contenido |
 |---|---|
@@ -44,9 +44,9 @@ Preparar tres ventanas:
 | 1:00–2:00 | Adrian | Arquitectura |
 | 2:00–3:00 | Adrian | Clúster y distribución |
 | 3:00–5:00 | Adrian | Inventario Fantasma |
-| 5:00–7:00 | Adrian | Condición de Carrera |
-| 7:00–9:30 | Rafael | Pasarela Lenta |
-| 9:30–11:00 | Rafael | Correo Perdido |
+| 5:00–7:30 | Rafael | Pasarela Lenta |
+| 7:30–9:00 | Rafael | Correo Perdido |
+| 9:00–11:00 | Adrian | Condición de Carrera |
 | 11:00–12:30 | Rafael | Logs y recuperación final |
 | 12:30–13:30 | Rafael | Conclusiones |
 
@@ -103,7 +103,74 @@ Señalar los tres nodos, las dos réplicas de Inventario en workers distintos y 
 
 8. **Duración:** aproximadamente 2 minutos.
 
-## 4. Condición de Carrera — Adrian
+## 4. Pasarela Lenta — Rafael
+
+1. **Estado inicial**
+
+   ```bash
+   kubectl -n tickets get deployment payments
+   kubectl -n tickets get configmap tickets-config \
+     -o jsonpath='{.data.PAYMENT_TIMEOUT_SECONDS}'; echo
+   ```
+
+2. **Comando exacto**
+
+   ```bash
+   ./scripts/faults/02-payment-latency.sh
+   ```
+
+3. **Ventana:** Terminal 1 para códigos y tiempos; Terminal 2 para el rollout de Pagos.
+
+4. **Resultado esperado:** las tres primeras reservas responden HTTP 503 cerca de 3 segundos; la cuarta responde 503 rápidamente porque el Circuit Breaker está abierto.
+
+5. **Evidencia:** comparar duraciones y señalar `evidence/payments/payment-latency.txt` junto con las Figuras 9–11.1 de `docs/report/images/`.
+
+6. **Recuperación**
+
+   ```bash
+   ./scripts/recovery/02-payment-recovery.sh
+   ./scripts/reset-demo.sh
+   ```
+
+7. **Frase técnica**
+
+   > El timeout limita cuánto espera cada reserva y el Circuit Breaker evita repetir llamadas costosas después de tres fallos consecutivos.
+
+8. **Duración:** aproximadamente 2 minutos y 30 segundos, incluida la espera de recuperación.
+
+## 5. Correo Perdido — Rafael
+
+1. **Estado inicial**
+
+   ```bash
+   kubectl -n tickets get pods -l app=notifications -o wide
+   ```
+
+2. **Comando exacto**
+
+   ```bash
+   ./scripts/faults/03-notification-down.sh
+   ```
+
+3. **Ventana:** Terminal 1 para la respuesta completa; Terminal 2 para confirmar que no quedan pods de Notificaciones.
+
+4. **Resultado esperado:** la reserva responde HTTP 201 con `status=confirmed` y `notification_status=pending`.
+
+5. **Evidencia:** señalar la ausencia de pods, la respuesta completa, `evidence/notifications/notification-down.txt` y las Figuras 12–14 de `docs/report/images/`.
+
+6. **Recuperación**
+
+   ```bash
+   ./scripts/recovery/03-notification-recovery.sh
+   ```
+
+7. **Frase técnica**
+
+   > Notificaciones es una dependencia no crítica: su caída no revierte una reserva pagada y el fallback registra `notification_status=pending`.
+
+8. **Duración:** aproximadamente 1 minuto y 30 segundos.
+
+## 6. Condición de Carrera — Adrian
 
 1. **Estado inicial:** Pagos y Notificaciones disponibles; el propio script prepara un único asiento.
 
@@ -135,73 +202,6 @@ Señalar los tres nodos, las dos réplicas de Inventario en workers distintos y 
    > La condición y el descuento ocurren en un único UPDATE atómico; PostgreSQL permite que solo una solicitud consuma el último asiento.
 
 8. **Duración:** aproximadamente 2 minutos.
-
-## 5. Pasarela Lenta — Rafael
-
-1. **Estado inicial**
-
-   ```bash
-   kubectl -n tickets get deployment payments
-   kubectl -n tickets get configmap tickets-config \
-     -o jsonpath='{.data.PAYMENT_TIMEOUT_SECONDS}'; echo
-   ```
-
-2. **Comando exacto**
-
-   ```bash
-   ./scripts/faults/02-payment-latency.sh
-   ```
-
-3. **Ventana:** Terminal 1 para códigos y tiempos; Terminal 2 para el rollout de Pagos.
-
-4. **Resultado esperado:** las tres primeras reservas responden HTTP 503 cerca de 3 segundos; la cuarta responde 503 rápidamente porque el Circuit Breaker está abierto.
-
-5. **Evidencia:** comparar duraciones, señalar logs de timeouts y `evidence/payments/reservations-circuit-breaker.log`.
-
-6. **Recuperación**
-
-   ```bash
-   ./scripts/recovery/02-payment-recovery.sh
-   ./scripts/reset-demo.sh
-   ```
-
-7. **Frase técnica**
-
-   > El timeout limita cuánto espera cada reserva y el Circuit Breaker evita repetir llamadas costosas después de tres fallos consecutivos.
-
-8. **Duración:** aproximadamente 2 minutos y 30 segundos, incluida la espera de recuperación.
-
-## 6. Correo Perdido — Rafael
-
-1. **Estado inicial**
-
-   ```bash
-   kubectl -n tickets get pods -l app=notifications -o wide
-   ```
-
-2. **Comando exacto**
-
-   ```bash
-   ./scripts/faults/03-notification-down.sh
-   ```
-
-3. **Ventana:** Terminal 1 para la respuesta completa; Terminal 2 para confirmar que no quedan pods de Notificaciones.
-
-4. **Resultado esperado:** la reserva responde HTTP 201 con `status=confirmed` y `notification_status=pending`.
-
-5. **Evidencia:** señalar la ausencia de pods, la respuesta completa, los logs del fallback y `evidence/notifications/`.
-
-6. **Recuperación**
-
-   ```bash
-   ./scripts/recovery/03-notification-recovery.sh
-   ```
-
-7. **Frase técnica**
-
-   > Notificaciones es una dependencia no crítica: su caída no revierte una reserva pagada y el fallback registra la entrega como pendiente.
-
-8. **Duración:** aproximadamente 1 minuto y 30 segundos.
 
 ## 7. Logs y recuperación final — Rafael
 

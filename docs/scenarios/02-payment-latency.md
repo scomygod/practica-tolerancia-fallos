@@ -61,17 +61,3 @@ kubectl -n tickets get deployment payments
 kubectl -n tickets logs deployment/reservations --since=10m
 kubectl -n tickets logs deployment/payments --since=10m
 ```
-
-## Evidencia requerida
-
-Guardar en `evidence/payments/`:
-
-1. Configuración de `PAYMENT_DELAY_SECONDS=20`.
-2. Rollout completo del Deployment de Pagos.
-3. Cuerpo, código HTTP y duración de las tres primeras reservas.
-4. Cuerpo, código HTTP y duración reducida de la cuarta reserva.
-5. Logs de Reservas con los timeouts, fallos de pago y compensaciones.
-6. Logs de Pagos mostrando las solicitudes lentas.
-7. Restauración de `PAYMENT_DELAY_SECONDS=0`.
-8. Espera del período de recuperación.
-9. Reserva HTTP 201 posterior y logs que demuestren la recuperación.
